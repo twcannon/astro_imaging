@@ -42,6 +42,7 @@ jupiter_blue_015_image = jupiter_blue_015[0].data
 #plt.colorbar()
 #plt.show()
 
+#stacking numpy arrays into a 3D array
 image_stack_array = []
 image_stack_array.append(jupiter_blue_001_image)
 image_stack_array.append(jupiter_blue_002_image)
@@ -59,10 +60,10 @@ image_stack_array.append(jupiter_blue_013_image)
 image_stack_array.append(jupiter_blue_014_image)
 image_stack_array.append(jupiter_blue_015_image)
 
-
+#median combine 3D array into one numpy array
 final_image = np.median(image_stack_array, axis=0)
-#final_image = np.zeros(shape=image_stack_array[0].shape)
 
+#display final median combined numpy array
 plt.imshow(final_image, cmap='gray')
 plt.colorbar()
 plt.show()
