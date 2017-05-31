@@ -10,5 +10,5 @@ for name in image[0].header:
 
 data = image[0].data
 
-plt.imshow(data, cmap='Reds')
-plt.show()
+# plt.imshow(data, cmap='Reds')
+# plt.show()
