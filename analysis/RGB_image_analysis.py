@@ -77,25 +77,26 @@ plt.imshow(final_image, cmap='gray')
 plt.colorbar()
 plt.show()
 
-#############################################################################
+###############################testing things##################################
 
-#testing things
+#Squishes into column data
 array = np.array([[0,1,2,3],[0,1,2,3],[0,1,2,3],[0,1,2,3]])
 
-#test = array[:,2] #spits out 3rd column (all 2's)
-#print(test)
+yfinal = []
+for i in range(len(array)):
+	y=0
+	for j in range(len(array[i])):
+		y += array[i][j]
+	yfinal.append(y)
+print(yfinal)
 
-x = []
-for d in xrange(1,5):
-    exec 'x%s = array[:,%s]' %(d,d-1)
-print(x1)
-print(x2)
-print(x3)
-print(x4)
-#newx = x3+x4
-#print(newx)
+#Squishes into row data
+array = np.array([[0,1,2,3],[0,1,2,3],[0,1,2,3],[0,1,2,3]])
 
-#not working correctly...might come back to it later
-for j in xrange(2,5):
-    exec 'xfinal = x1+x%s' %(j,j-1)
+xfinal = []
+for i in range(len(array)):
+	x=0
+	for j in range(len(array[i])):
+		x += array[j][i]
+	xfinal.append(x)
 print(xfinal)
