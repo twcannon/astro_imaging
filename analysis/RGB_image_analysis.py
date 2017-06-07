@@ -1,54 +1,35 @@
-from astropy.io import fits
+import os
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.io import fits
+
 #import cv2
 
-#import fits files as hdulist
-jupiter_blue_001 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_001.fit')
-jupiter_blue_002 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_002.fit')
-jupiter_blue_003 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_003.fit')
-jupiter_blue_004 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_004.fit')
-jupiter_blue_005 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_005.fit')
-jupiter_blue_006 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_006.fit')
-jupiter_blue_007 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_007.fit')
-jupiter_blue_008 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_008.fit')
-jupiter_blue_009 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_009.fit')
-jupiter_blue_010 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_010.fit')
-jupiter_blue_011 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_011.fit')
-jupiter_blue_012 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_012.fit')
-jupiter_blue_013 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_013.fit')
-jupiter_blue_014 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_014.fit')
-jupiter_blue_015 = fits.open('Observing_5_10_2017/Jupiter/p25Seconds/JupiterB_015.fit')
+#### INCLUDE CONTROL HERE TO SEARCH AND ITERATE THROUGH COLORS
 
+#### temporarily hardcoded
+filepath = '../data/20170510_jupiter/250ms/blue/'
 
-#converting hdulist into numpy arrays
-jupiter_blue_001_image = jupiter_blue_001[0].data
-jupiter_blue_002_image = jupiter_blue_002[0].data
-jupiter_blue_003_image = jupiter_blue_003[0].data
-jupiter_blue_004_image = jupiter_blue_004[0].data
-jupiter_blue_005_image = jupiter_blue_005[0].data
-jupiter_blue_006_image = jupiter_blue_006[0].data
-jupiter_blue_007_image = jupiter_blue_007[0].data
-jupiter_blue_008_image = jupiter_blue_008[0].data
-jupiter_blue_009_image = jupiter_blue_009[0].data
-jupiter_blue_010_image = jupiter_blue_010[0].data
-jupiter_blue_011_image = jupiter_blue_011[0].data
-jupiter_blue_012_image = jupiter_blue_012[0].data
-jupiter_blue_013_image = jupiter_blue_013[0].data
-jupiter_blue_014_image = jupiter_blue_014[0].data
-jupiter_blue_015_image = jupiter_blue_015[0].data
+jupiter_blue_image = {}
+file_num = 0
+for filename in os.listdir(filepath):
+    if filename.endswith(".fit"): 
+        print 'found image at ' + filepath + filename
+        jupiter_blue_image[file_num] = fits.open(filepath+filename)[0].data
+        file_num+=1
+    else:
+    	print filename + ' is not a valid image file'
+
 
 #test to view the numpy array as an image
-plt.imshow(jupiter_blue_001_image, cmap='Blues')
+plt.imshow(jupiter_blue_image[2], cmap='Blues')
 plt.colorbar()
 plt.show()
 
-plt.imshow(jupiter_blue_015_image, cmap='Blues')
-plt.colorbar()
-plt.show()
+# sys.exit('done')
 
 #test to find the dimensions of the image
-#image_size = jupiter_blue_001_image.shape
+#image_size = jupiter_blue_image[0].shape
 #print image_size #1024 high x 1360 wide
 
 ###########################COLUMN#####################################
@@ -57,7 +38,7 @@ jupiter_blue_001_column = []
 for i in range(1024):
 	y=0
 	for j in range(1360):
-		y += jupiter_blue_001_image[i][j]
+		y += jupiter_blue_image[0][i][j]
 	jupiter_blue_001_column.append(y)
 #print(jupiter_blue_001_column)
 max_value_column_j_b_1 = (max(jupiter_blue_001_column))
@@ -70,7 +51,7 @@ jupiter_blue_015_column = []
 for i in range(1024):
 	y=0
 	for j in range(1360):
-		y += jupiter_blue_015_image[i][j]
+		y += jupiter_blue_image[14][i][j]
 	jupiter_blue_015_column.append(y)
 #print(jupiter_blue_015_column)
 max_value_column_j_b_15 = (max(jupiter_blue_015_column))
@@ -85,7 +66,7 @@ jupiter_blue_001_row = []
 for i in range(1360):
 	x=0
 	for j in range(1024):
-		x += jupiter_blue_001_image[j][i]
+		x += jupiter_blue_image[0][j][i]
 	jupiter_blue_001_row.append(x)
 #print(jupiter_blue_001_row)
 max_value_row_j_b_1 = (max(jupiter_blue_001_row))
@@ -98,7 +79,7 @@ jupiter_blue_015_row = []
 for i in range(1360):
 	x=0
 	for j in range(1024):
-		x += jupiter_blue_015_image[j][i]
+		x += jupiter_blue_image[14][j][i]
 	jupiter_blue_015_row.append(x)
 #print(jupiter_blue_015_row)
 max_value_row_j_b_15 = (max(jupiter_blue_015_row))
@@ -113,12 +94,12 @@ print(max_index_row_j_b_15)
 #image shift
 	#axis 0 eq vertically
 	#axis 1 eq horizontally
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (100), axis=1) #to the right
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (-100), axis=1) #to the left
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (100), axis=0) #down
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (-100), axis=0) #up
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=1) #to the right
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=1) #to the left
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=0) #down
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=0) #up
 #shift 1
-jupiter_blue_015_vertical_shift = np.roll(jupiter_blue_015_image, (max_index_column_j_b_1 - max_index_column_j_b_15), axis=0)
+jupiter_blue_015_vertical_shift = np.roll(jupiter_blue_image[14], (max_index_column_j_b_1 - max_index_column_j_b_15), axis=0)
 
 plt.imshow(jupiter_blue_015_vertical_shift, cmap='Blues')
 plt.colorbar()
@@ -134,7 +115,7 @@ plt.show()
 
 #stacking numpy arrays into a 3D array
 image_stack_array = []
-image_stack_array.append(jupiter_blue_001_image)
+image_stack_array.append(jupiter_blue_image[0])
 #image_stack_array.append(jupiter_blue_002_image)
 #image_stack_array.append(jupiter_blue_003_image)
 #image_stack_array.append(jupiter_blue_004_image)
@@ -149,7 +130,7 @@ image_stack_array.append(jupiter_blue_001_image)
 #image_stack_array.append(jupiter_blue_013_image)
 #image_stack_array.append(jupiter_blue_014_image)
 image_stack_array.append(jupiter_blue_015_final_shifted)
-#image_stack_array.append(jupiter_blue_015_image)
+#image_stack_array.append(jupiter_blue_image[14])
 
 #median combine 3D array into one numpy array
 final_image = np.median(image_stack_array, axis=0)
