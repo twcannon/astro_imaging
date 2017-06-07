@@ -51,6 +51,87 @@ plt.show()
 #image_size = jupiter_blue_001_image.shape
 #print image_size #1024 high x 1360 wide
 
+###########################COLUMN#####################################
+#Squishes jupiter 001 pictures into column data
+jupiter_blue_001_column = []
+for i in range(1024):
+	y=0
+	for j in range(1360):
+		y += jupiter_blue_001_image[i][j]
+	jupiter_blue_001_column.append(y)
+#print(jupiter_blue_001_column)
+max_value_column_j_b_1 = (max(jupiter_blue_001_column))
+print(max_value_column_j_b_1)
+max_index_column_j_b_1 = jupiter_blue_001_column.index(max_value_column_j_b_1)
+print(max_index_column_j_b_1)
+
+#Squishes jupiter 015 pictures into column data
+jupiter_blue_015_column = []
+for i in range(1024):
+	y=0
+	for j in range(1360):
+		y += jupiter_blue_015_image[i][j]
+	jupiter_blue_015_column.append(y)
+#print(jupiter_blue_015_column)
+max_value_column_j_b_15 = (max(jupiter_blue_015_column))
+print(max_value_column_j_b_15)
+max_index_column_j_b_15 = jupiter_blue_015_column.index(max_value_column_j_b_15)
+print(max_index_column_j_b_15)
+######################################################################
+
+#############################ROW######################################
+#Squishes jupiter 001 pictures into row data
+jupiter_blue_001_row = []
+for i in range(1360):
+	x=0
+	for j in range(1024):
+		x += jupiter_blue_001_image[j][i]
+	jupiter_blue_001_row.append(x)
+#print(jupiter_blue_001_row)
+max_value_row_j_b_1 = (max(jupiter_blue_001_row))
+print(max_value_row_j_b_1)
+max_index_row_j_b_1 = jupiter_blue_001_row.index(max_value_row_j_b_1)
+print(max_index_row_j_b_1)
+
+#Squishes jupiter 015 pictures into row data
+jupiter_blue_015_row = []
+for i in range(1360):
+	x=0
+	for j in range(1024):
+		x += jupiter_blue_015_image[j][i]
+	jupiter_blue_015_row.append(x)
+#print(jupiter_blue_015_row)
+max_value_row_j_b_15 = (max(jupiter_blue_015_row))
+print(max_value_row_j_b_15)
+max_index_row_j_b_15 = jupiter_blue_015_row.index(max_value_row_j_b_15)
+print(max_index_row_j_b_15)
+######################################################################
+
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+#image shift
+	#axis 0 eq vertically
+	#axis 1 eq horizontally
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (100), axis=1) #to the right
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (-100), axis=1) #to the left
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (100), axis=0) #down
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_015_image, (-100), axis=0) #up
+#shift 1
+jupiter_blue_015_vertical_shift = np.roll(jupiter_blue_015_image, (max_index_column_j_b_1 - max_index_column_j_b_15), axis=0)
+
+plt.imshow(jupiter_blue_015_vertical_shift, cmap='Blues')
+plt.colorbar()
+plt.show()
+
+#shift 2
+jupiter_blue_015_final_shifted = np.roll(jupiter_blue_015_vertical_shift, (max_index_row_j_b_1 - max_index_row_j_b_15), axis=1)
+
+plt.imshow(jupiter_blue_015_final_shifted, cmap='Blues')
+plt.colorbar()
+plt.show()
+
+
 #stacking numpy arrays into a 3D array
 image_stack_array = []
 image_stack_array.append(jupiter_blue_001_image)
@@ -67,13 +148,14 @@ image_stack_array.append(jupiter_blue_001_image)
 #image_stack_array.append(jupiter_blue_012_image)
 #image_stack_array.append(jupiter_blue_013_image)
 #image_stack_array.append(jupiter_blue_014_image)
-image_stack_array.append(jupiter_blue_015_image)
+image_stack_array.append(jupiter_blue_015_final_shifted)
+#image_stack_array.append(jupiter_blue_015_image)
 
 #median combine 3D array into one numpy array
 final_image = np.median(image_stack_array, axis=0)
 
 #display final median combined numpy array
-plt.imshow(final_image, cmap='gray')
+plt.imshow(final_image, cmap='Blues')
 plt.colorbar()
 plt.show()
 
