@@ -1,13 +1,16 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 from astropy.io import fits
 
 #### INCLUDE CONTROL HERE TO SEARCH AND ITERATE THROUGH COLORS
-
+print 'starting Blue'
 ###########################################################################################################
 ###############################################BLUE########################################################
 ###########################################################################################################
+
+
 
 #### temporarily hardcoded
 #import fits files as hdulist and convert into numpy arays
@@ -23,16 +26,18 @@ for filename in os.listdir(filepath):
     else:
     	print filename + ' is not a valid image file'
 
+
+# im = Image.merge("RGB", (jupiter_blue_image[0], jupiter_blue_image[1], jupiter_blue_image[2]))
+
 #establishing a loop that equals the number of images being used
 loop_number = file_num - 1
 #print(loop_number)
 
 #view the numpy arrays as an images
-x=0
-for x in range(loop_number):
-	plt.imshow(jupiter_blue_image[x], cmap='Blues')
-	plt.colorbar()
-	plt.show()
+# plt.plot(im)
+# plt.colorbar()
+# plt.show()
+
 
 #print(done)
 
@@ -96,9 +101,10 @@ for x in range(loop_number):
 final_blue_image = np.median(jupiter_blue_final_shifted, axis=0)
 
 #display final median combined numpy array
-plt.imshow(final_blue_image, cmap='Blues')
-plt.colorbar()
-plt.show()
+# plt.imshow(final_blue_image, cmap='Blues')
+# plt.colorbar()
+# plt.show()
+print 'starting Red'
 
 ###########################################################################################################
 ###########################################################################################################
@@ -127,11 +133,11 @@ loop_number = file_num - 1
 #print(loop_number)
 
 #view the numpy arrays as an images
-x=0
-for x in range(loop_number):
-	plt.imshow(jupiter_red_image[x], cmap='Reds')
-	plt.colorbar()
-	plt.show()
+# x=0
+# for x in range(loop_number):
+	# plt.imshow(jupiter_red_image[x], cmap='Reds')
+	# plt.colorbar()
+	# plt.show()
 
 #test to find the dimensions of the image
 #image_size = jupiter_blue_image[0].shape
@@ -193,9 +199,10 @@ for x in range(loop_number):
 final_red_image = np.median(jupiter_red_final_shifted, axis=0)
 
 #display final median combined numpy array
-plt.imshow(final_red_image, cmap='Reds')
-plt.colorbar()
-plt.show()
+# plt.imshow(final_red_image, cmap='Reds')
+# plt.colorbar()
+# plt.show()
+print 'starting Green'
 
 ###########################################################################################################
 ###########################################################################################################
@@ -224,11 +231,11 @@ loop_number = file_num - 1
 #print(loop_number)
 
 #view the numpy arrays as an images
-x=0
-for x in range(loop_number):
-	plt.imshow(jupiter_green_image[x], cmap='Greens')
-	plt.colorbar()
-	plt.show()
+# x=0
+# for x in range(loop_number):
+	# plt.imshow(jupiter_green_image[x], cmap='Greens')
+	# plt.colorbar()
+	# plt.show()
 
 #test to find the dimensions of the image
 #image_size = jupiter_blue_image[0].shape
@@ -290,9 +297,11 @@ for x in range(loop_number):
 final_green_image = np.median(jupiter_green_final_shifted, axis=0)
 
 #display final median combined numpy array
-plt.imshow(final_green_image, cmap='Greens')
-plt.colorbar()
-plt.show()
+# plt.imshow(final_green_image, cmap='Greens')
+# plt.colorbar()
+# plt.show()
+
+print 'starting RGB'
 
 ###########################################################################################################
 ###########################################################################################################
@@ -359,11 +368,15 @@ for x in range(3):
 #median combine all shifted images into a final image
 final_rgb_image = np.median(jupiter_rgb_final_shifted, axis=0)
 
-#display final median combined numpy array
-plt.imshow(final_rgb_image, cmap='Greys')
-plt.colorbar()
-plt.show()
+arr = np.dstack([jupiter_rgb_final_shifted[0], jupiter_rgb_final_shifted[1], jupiter_rgb_final_shifted[2]])
+im = Image.fromarray(arr, 'RGB')
 
+#display final median combined numpy array
+# plt.imshow(final_rgb_image, cmap='Greys')
+# plt.colorbar()
+# plt.show()
+
+im.show()
 ###########################################################################################################
 ###########################################################################################################
 ###########################################################################################################
