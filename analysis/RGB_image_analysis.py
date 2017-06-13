@@ -416,7 +416,7 @@ final_rgb_image = ((jupiter_rgb_final_shifted[0]*0.3)+(jupiter_rgb_final_shifted
 #WE DON'T MEDIAN COMBINE THE FINAL RGB IMAGE
 #final_rgb_image = np.median(jupiter_rgb_final_shifted, axis=0)
 
-#display final median combined numpy array
+#display properly proportioned final combined numpy array as image
 plt.imshow(final_rgb_image, cmap='Greys')
 plt.colorbar()
 plt.show()
@@ -424,6 +424,26 @@ plt.show()
 plt.imshow(final_rgb_image)
 plt.colorbar()
 plt.show()
+
+#blocks out jupiter so you can see the moons
+#only valid for this particular image set
+for i in range(1360):
+	y=0
+	for j in range(1024):
+		y = final_rgb_image[j][i]
+		if y > 5000.0:
+			y = 2000.0
+		final_rgb_image[j][i] = y
+
+#display properly proportioned final combined numpy array as image
+plt.imshow(final_rgb_image, cmap='Greys')
+plt.colorbar()
+plt.show()
+
+plt.imshow(final_rgb_image)
+plt.colorbar()
+plt.show()
+
 
 ###########################################################################################################
 ###########################################################################################################
