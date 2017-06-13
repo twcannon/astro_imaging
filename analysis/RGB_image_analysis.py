@@ -2,23 +2,24 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
+#import skimage.io as io  #thought it was a way to plot a "true color image" but is just another way of doing what matplotlib does
 
 #### INCLUDE CONTROL HERE TO SEARCH AND ITERATE THROUGH COLORS
 
 ###########################################################################################################
-###############################################BLUE########################################################
+###############################################DARKS#######################################################
 ###########################################################################################################
 
 #### temporarily hardcoded
 #import fits files as hdulist and convert into numpy arays
-filepath = '../data/20170510_jupiter/250ms/blue/'
+filepath = '../data/20170510_jupiter/250msDarks/'
 
-jupiter_blue_image = {}
+jupiter_darks = {}
 file_num = 0
 for filename in os.listdir(filepath):
     if filename.endswith(".fit"): 
         print 'found image at ' + filepath + filename
-        jupiter_blue_image[file_num] = fits.open(filepath+filename)[0].data
+        jupiter_darks[file_num] = fits.open(filepath+filename)[0].data
         file_num+=1
     else:
     	print filename + ' is not a valid image file'
@@ -28,77 +29,25 @@ loop_number = file_num - 1
 #print(loop_number)
 
 #view the numpy arrays as an images
-x=0
-for x in range(loop_number):
-	plt.imshow(jupiter_blue_image[x], cmap='Blues')
-	plt.colorbar()
-	plt.show()
+#x=0
+#for x in range(loop_number):
+#	plt.imshow(jupiter_darks[x], cmap='Greys')
+#	plt.colorbar()
+#	plt.show()
 
-#print(done)
-
-#test to find the dimensions of the image
-#image_size = jupiter_blue_image[0].shape
-#print image_size #1024 high x 1360 wide
-
-#Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
-indexcolumnarray = []
+jupiter_darks_2 = []
 x = 0
 for x in range(loop_number):
-	jupiter_blue_column = []
-	for i in range(1024):
-		y=0
-		for j in range(1360):
-			y += jupiter_blue_image[x][i][j]
-		jupiter_blue_column.append(y)
-	index = np.where(jupiter_blue_column == np.max(jupiter_blue_column))
-	indexcolumnarray.append(index[0][0])
-print(indexcolumnarray)
-#print(indexcolumnarray[0])
+	jupiter_darks_2.append(jupiter_darks[x])
 
-#Squishes each jupiter image into a 1D row array and finds where the max value is (horizontal)
-indexrowarray = []
-x = 0
-for x in range(loop_number):
-	jupiter_blue_row = []
-	for i in range(1360):
-		y=0
-		for j in range(1024):
-			y += jupiter_blue_image[x][j][i]
-		jupiter_blue_row.append(y)
-	index = np.where(jupiter_blue_row == np.max(jupiter_blue_row))
-	indexrowarray.append(index[0][0])
-print(indexrowarray)
-#print(indexrowarray[0])
-
-#image shift key
-	#axis 0 eq vertically
-	#axis 1 eq horizontally
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=1) #to the right
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=1) #to the left
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=0) #down
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=0) #up
-
-#shift images vertically
-jupiter_blue_vertical_shifted = []
-x = 0
-for x in range(loop_number):
-	jupiter_blue_image[x] = np.roll(jupiter_blue_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
-	jupiter_blue_vertical_shifted.append(jupiter_blue_image[x])
-
-#shift images horizontally
-jupiter_blue_final_shifted = []
-x = 0
-for x in range(loop_number):
-	jupiter_blue_vertical_shifted[x] = np.roll(jupiter_blue_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
-	jupiter_blue_final_shifted.append(jupiter_blue_vertical_shifted[x])
-
-#median combine all shifted images into a final image
-final_blue_image = np.median(jupiter_blue_final_shifted, axis=0)
+#median combine all dark images into a final image
+final_darks = np.median(jupiter_darks_2, axis=0)
 
 #display final median combined numpy array
-plt.imshow(final_blue_image, cmap='Blues')
-plt.colorbar()
-plt.show()
+#plt.imshow(final_darks)
+#plt.colorbar()
+#plt.show()
+#print(stop)
 
 ###########################################################################################################
 ###########################################################################################################
@@ -126,9 +75,10 @@ for filename in os.listdir(filepath):
 loop_number = file_num - 1
 #print(loop_number)
 
-#view the numpy arrays as an images
+#subtract darks from numpy arrays and view images
 x=0
 for x in range(loop_number):
+	jupiter_red_image[x] = (jupiter_red_image[x] - final_darks)
 	plt.imshow(jupiter_red_image[x], cmap='Reds')
 	plt.colorbar()
 	plt.show()
@@ -223,9 +173,11 @@ for filename in os.listdir(filepath):
 loop_number = file_num - 1
 #print(loop_number)
 
-#view the numpy arrays as an images
+
+#subtract darks from numpy arrays and view images
 x=0
 for x in range(loop_number):
+	jupiter_green_image[x] = (jupiter_green_image[x] - final_darks)
 	plt.imshow(jupiter_green_image[x], cmap='Greens')
 	plt.colorbar()
 	plt.show()
@@ -299,10 +251,112 @@ plt.show()
 ###########################################################################################################
 
 ###########################################################################################################
+###############################################BLUE########################################################
+###########################################################################################################
+
+#### temporarily hardcoded
+#import fits files as hdulist and convert into numpy arays
+filepath = '../data/20170510_jupiter/250ms/blue/'
+
+jupiter_blue_image = {}
+file_num = 0
+for filename in os.listdir(filepath):
+    if filename.endswith(".fit"): 
+        print 'found image at ' + filepath + filename
+        jupiter_blue_image[file_num] = fits.open(filepath+filename)[0].data
+        file_num+=1
+    else:
+    	print filename + ' is not a valid image file'
+
+#establishing a loop that equals the number of images being used
+loop_number = file_num - 1
+#print(loop_number)
+
+
+#subtract darks from numpy arrays and view images
+x=0
+for x in range(loop_number):
+	jupiter_blue_image[x] = (jupiter_blue_image[x] - final_darks)
+	plt.imshow(jupiter_blue_image[x], cmap='Blues')
+	plt.colorbar()
+	plt.show()
+#only use if using skimage.io
+#	io.imshow(jupiter_blue_image[x])
+#	io.show()
+
+#test to find the dimensions of the image
+#image_size = jupiter_blue_image[0].shape
+#print image_size #1024 high x 1360 wide
+
+#Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
+indexcolumnarray = []
+x = 0
+for x in range(loop_number):
+	jupiter_blue_column = []
+	for i in range(1024):
+		y=0
+		for j in range(1360):
+			y += jupiter_blue_image[x][i][j]
+		jupiter_blue_column.append(y)
+	index = np.where(jupiter_blue_column == np.max(jupiter_blue_column))
+	indexcolumnarray.append(index[0][0])
+print(indexcolumnarray)
+#print(indexcolumnarray[0])
+
+#Squishes each jupiter image into a 1D row array and finds where the max value is (horizontal)
+indexrowarray = []
+x = 0
+for x in range(loop_number):
+	jupiter_blue_row = []
+	for i in range(1360):
+		y=0
+		for j in range(1024):
+			y += jupiter_blue_image[x][j][i]
+		jupiter_blue_row.append(y)
+	index = np.where(jupiter_blue_row == np.max(jupiter_blue_row))
+	indexrowarray.append(index[0][0])
+print(indexrowarray)
+#print(indexrowarray[0])
+
+#image shift key
+	#axis 0 eq vertically
+	#axis 1 eq horizontally
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=1) #to the right
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=1) #to the left
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=0) #down
+	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=0) #up
+
+#shift images vertically
+jupiter_blue_vertical_shifted = []
+x = 0
+for x in range(loop_number):
+	jupiter_blue_image[x] = np.roll(jupiter_blue_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
+	jupiter_blue_vertical_shifted.append(jupiter_blue_image[x])
+
+#shift images horizontally
+jupiter_blue_final_shifted = []
+x = 0
+for x in range(loop_number):
+	jupiter_blue_vertical_shifted[x] = np.roll(jupiter_blue_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
+	jupiter_blue_final_shifted.append(jupiter_blue_vertical_shifted[x])
+
+#median combine all shifted images into a final image
+final_blue_image = np.median(jupiter_blue_final_shifted, axis=0)
+
+#display final median combined numpy array
+plt.imshow(final_blue_image, cmap='Blues')
+plt.colorbar()
+plt.show()
+
+###########################################################################################################
+###########################################################################################################
+###########################################################################################################
+
+###########################################################################################################
 #################################################RGB#######################################################
 ###########################################################################################################
 
-jupiter_rgb_image = [final_blue_image, final_red_image, final_green_image]
+jupiter_rgb_image = [final_red_image, final_green_image, final_blue_image]
 
 #Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
 indexcolumnarray = []
@@ -356,11 +410,18 @@ for x in range(3):
 	jupiter_rgb_vertical_shifted[x] = np.roll(jupiter_rgb_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
 	jupiter_rgb_final_shifted.append(jupiter_rgb_vertical_shifted[x])
 
+final_rgb_image = ((jupiter_rgb_final_shifted[0]*0.3)+(jupiter_rgb_final_shifted[1]*0.3)+(jupiter_rgb_final_shifted[2]*0.3))
+
 #median combine all shifted images into a final image
-final_rgb_image = np.median(jupiter_rgb_final_shifted, axis=0)
+#WE DON'T MEDIAN COMBINE THE FINAL RGB IMAGE
+#final_rgb_image = np.median(jupiter_rgb_final_shifted, axis=0)
 
 #display final median combined numpy array
 plt.imshow(final_rgb_image, cmap='Greys')
+plt.colorbar()
+plt.show()
+
+plt.imshow(final_rgb_image)
 plt.colorbar()
 plt.show()
 
