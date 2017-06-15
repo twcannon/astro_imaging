@@ -402,19 +402,42 @@ for x in range(3):
 	rgb_vertical_shifted[x] = np.roll(rgb_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
 	rgb_final_shifted.append(rgb_vertical_shifted[x])
 
-#creating and displaying a proper rgb image
-maxvalarray = []
-maxvalue1= np.amax(rgb_final_shifted[0])
-maxvalarray.append(maxvalue1)
-maxvalue2= np.amax(rgb_final_shifted[1])
-maxvalarray.append(maxvalue2)
-maxvalue3= np.amax(rgb_final_shifted[2])
-maxvalarray.append(maxvalue3)
-maxvalue = np.amax(maxvalarray)
+#############################################################
+##blocks out jupiter so you can see the moons
+##only valid for this particular image set
+#for i in range(1360):
+#	y=0
+#	for j in range(1024):
+#		y = rgb_final_shifted[0][j][i]
+#		if y > 5000.0:
+#			y = 2000.0
+#		rgb_final_shifted[0][j][i] = y
+#
+#for i in range(1360):
+#	y=0
+#	for j in range(1024):
+#		y = rgb_final_shifted[1][j][i]
+#		if y > 5000.0:
+#			y = 2000.0
+#		rgb_final_shifted[1][j][i] = y
+#
+#for i in range(1360):
+#	y=0
+#	for j in range(1024):
+#		y = rgb_final_shifted[2][j][i]
+#		if y > 5000.0:
+#			y = 2000.0
+#		rgb_final_shifted[2][j][i] = y
+#
+#rgb_final_shifted[0] = (rgb_final_shifted[0]/(5000))
+#rgb_final_shifted[1] = (rgb_final_shifted[1]/(5000))
+#rgb_final_shifted[2] = (rgb_final_shifted[2]/(5000))
+#############################################################
 
-rgb_final_shifted[0] = (rgb_final_shifted[0]/(maxvalue+1))
-rgb_final_shifted[1] = (rgb_final_shifted[1]/(maxvalue+1))
-rgb_final_shifted[2] = (rgb_final_shifted[2]/(maxvalue+1))
+#creating and displaying a proper rgb image
+rgb_final_shifted[0] = (rgb_final_shifted[0]/(65536))
+rgb_final_shifted[1] = (rgb_final_shifted[1]/(65536))
+rgb_final_shifted[2] = (rgb_final_shifted[2]/(65536))
 
 rgbArray = np.zeros((1024,1360,3))
 rgbArray[..., 0] = rgb_final_shifted[0]
@@ -424,18 +447,6 @@ py.clf
 py.imshow(rgbArray, aspect='equal')
 py.title('Final RGB Image')
 py.savefig('jupiter_image.png')
-
-############################################################
-##blocks out jupiter so you can see the moons
-##only valid for this particular image set
-#for i in range(1360):
-#	y=0
-#	for j in range(1024):
-#		y = final_rgb_image[j][i]
-#		if y > 5000.0:
-#			y = 2000.0
-#		final_rgb_image[j][i] = y
-############################################################
 
 #creating and display an improperly final combined numpy array as an image (just so you can see how it looks)
 final_rgb_image = ((rgb_final_shifted[0]*0.3)+(rgb_final_shifted[1]*0.3)+(rgb_final_shifted[2]*0.3))
