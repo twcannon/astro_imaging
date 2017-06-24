@@ -1,59 +1,53 @@
-import os
+import os,sys,re
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from PIL import Image
 import pylab as py
-#import skimage.io as io  #thought it was a way to plot a "true color image" but is just another way of doing what matplotlib does
 
-#### INCLUDE CONTROL HERE TO SEARCH AND ITERATE THROUGH COLORS
 
-###########################################################################################################
-###############################################DARKS#######################################################
-###########################################################################################################
+FILEPATH = '../data/'
 
-#### temporarily hardcoded
-#import fits files as hdulist and convert into numpy arays
-#filepath = '../data/20170613_venus/3ms/darks/'
-#filepath = '../data/20170613_saturn/19ms/darks/'
-filepath = '../data/20170510_jupiter/100ms/darks/'
-#filepath = '../data/20170510_jupiter/250ms/darks/'
+print 'Which data would you like to process?'
+observation_filepaths = {}
+obs_count = 1
+objects = [name for name in os.listdir(FILEPATH) if os.path.isdir(os.path.join(FILEPATH, name))]
+for obs in objects:
+	exposures = [name for name in os.listdir(FILEPATH+obs) if os.path.isdir(os.path.join(FILEPATH+obs, name))]
+	for exp in exposures:
+		print str(obs_count)+' - '+str(obs)+' at an exposure of '+str(exp)
+		observation_filepaths[obs_count] = '../data/'+str(obs)+'/'+str(exp)
+		obs_count+=1
 
-darks = {}
-file_num = 0
-for filename in os.listdir(filepath):
-    if filename.endswith(".fit"): 
-        print 'found image at ' + filepath + filename
-        darks[file_num] = fits.open(filepath+filename)[0].data
-        file_num+=1
-    else:
-    	print filename + ' is not a valid image file'
+obs_number = ""
+while not (len(obs_number)>0 and re.match("^(?!_)\w*(?<!_)$",obs_number)):
+    obs_number = raw_input('Select a Number above (Ex. 1,2,3,...)\n'+
+                'Please use only numeric characters (0-9)\n')
+all_filt_paths = [name for name in os.listdir(observation_filepaths[int(obs_number)]) if os.path.isdir(os.path.join(observation_filepaths[int(obs_number)], name))]
 
-#establishing a loop that equals the number of images being used
-loop_number = file_num - 1
-#print(loop_number)
+for filt_path in all_filt_paths:
+	if any(file.endswith(".fit") for file in os.listdir(observation_filepaths[int(obs_number)]+'/'+filt_path)):
+		filepath = observation_filepaths[int(obs_number)]+'/'+filt_path+'/'
 
-#view the numpy arrays as an images
-#x=0
-#for x in range(loop_number):
-#	plt.imshow(darks[x], cmap='Greys')
-#	plt.colorbar()
-#	plt.show()
+		filt = {}
+		file_num = 0
+		for filename in os.listdir(filepath):
+		    if filename.endswith(".fit"): 
+		        filt[file_num] = fits.open(filepath+filename)[0].data
+		        file_num+=1
+		    else:
+		    	next
 
-#stack dark image numpy arrays 
-darks_stack = []
-x = 0
-for x in range(loop_number):
-	darks_stack.append(darks[x])
+		loop_number = file_num - 1
+		#stack dark image numpy arrays 
+		filt_stack = []
+		for x in range(0,loop_number):
+			filt_stack.append(filt[x])
 
-#median combine all dark images into a final image
-final_darks = np.median(darks_stack, axis=0)
+		#median combine all dark images into a final image
+		final_darks = np.median(filt_stack, axis=0)
 
-#display final median combined numpy array
-#plt.imshow(final_darks)
-#plt.colorbar()
-#plt.show()
-#print(stop)
+		sys.exit('done')
 
 ###########################################################################################################
 ###########################################################################################################
@@ -86,7 +80,7 @@ loop_number = file_num - 1
 
 #subtract darks from numpy arrays and view images
 x=0
-for x in range(loop_number):
+for x in range(0,loop_number):
 	red_image[x] = (red_image[x] - final_darks)
 	img = Image.fromarray(red_image[x], 'RGB')
 	plt.imshow(red_image[x], cmap='Reds')
