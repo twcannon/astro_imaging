@@ -4,6 +4,135 @@ import numpy as np
 from astropy.io import fits
 from PIL import Image
 import pylab as py
+from terminalUtils import progress
+import glob
+
+
+
+def filter_switch(filt_filepath,filt,final_darks):
+	if final_darks is None:
+		return dark(filt_filepath+'/darks/','dark',"Greys_r")
+	else:
+		filt_filepath = filt_filepath+'/'+filt+'/'
+		return {
+			'red':color(filt_filepath,filt,"Reds_r",final_darks),
+			'blue':color(filt_filepath,filt,"Blues_r",final_darks),
+			'green':color(filt_filepath,filt,"Greens_r",final_darks)
+		}[filt]
+			# 'dark':dark(filt_filepath,filt,"Greys_r")
+			# 'visible':visible(filt_filepath,'visible','Greys_r'),
+			# 'flats':flats(filt_filepath,'flats','Greys_r'),
+
+
+
+
+def color(filt_filepath,filt,colormap,final_darks):
+	fit_image = {}
+	file_num = 0
+	file_total = len(glob.glob1(filt_filepath,"*.fit"))
+
+	for filename in os.listdir(filt_filepath):
+	    if filename.endswith(".fit"): 
+	        fit_image[file_num] = fits.open(filt_filepath+filename)[0].data
+	        progress(file_num+1, file_total, status=('loading '+filt+' files'))
+	        file_num+=1
+	    # else:
+	    # 	print filename + ' is not a valid image file'
+
+	print '' # this is a hack that was needed to get the progress bar to work?????
+	print 'Processing '+str(file_total)+' files...'	
+
+	#subtract darks from numpy arrays and view images
+	loop_number = file_num - 1
+	# for x in range(0,loop_number):
+	# 	fit_image[x] = (fit_image[x] - final_darks)
+
+	# find the dimensions of the image
+	image_size = fit_image[0].shape
+
+	#Squishes each image into a 1D column array and finds where the max value is (vertical)
+	print 'Centering '+filt+' images vertically'
+	indexcolumnarray = []
+	for x in range(0,loop_number):
+		fit_column = []
+		for i in range(image_size[0]):
+			y=0
+			for j in range(image_size[1]):
+				y += fit_image[x][i][j]
+			fit_column.append(y)
+		index = np.where(fit_column == np.max(fit_column))
+		indexcolumnarray.append(index[0][0])
+	
+	#Squishes each image into a 1D row array and finds where the max value is (horizontal)
+	print 'Centering '+filt+' images horizontally'
+	indexrowarray = []
+	for x in range(0,loop_number):
+		fit_row = []
+		for i in range(image_size[1]):
+			y=0
+			for j in range(image_size[0]):
+				y += fit_image[x][j][i]
+			fit_row.append(y)
+		index = np.where(fit_row == np.max(fit_row))
+		indexrowarray.append(index[0][0])
+
+	#shift images vertically
+	fit_vertical_shifted = []
+	for x in range(0,loop_number):
+		fit_image[x] = np.roll(fit_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
+		fit_vertical_shifted.append(fit_image[x])
+
+	#shift images horizontally
+	green_final_shifted = []
+	for x in range(0,loop_number):
+		fit_vertical_shifted[x] = np.roll(fit_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
+		green_final_shifted.append(fit_vertical_shifted[x])
+
+	#median combine all shifted images into a final image
+	print 'Combining centered images'
+	final_fit_image = np.median(green_final_shifted, axis=0)
+
+	# optional plotting. comment out if not wanted.
+	plt.imshow(final_fit_image, cmap=colormap)
+	plt.colorbar()
+	plt.show()
+
+	return final_fit_image
+
+
+def dark(filt_filepath,filt,colormap):
+
+	fit_image = {}
+	file_num = 0
+	file_total = len(glob.glob1(filt_filepath,"*.fit"))
+
+	for filename in os.listdir(filt_filepath):
+	    if filename.endswith(".fit"): 
+	        fit_image[file_num] = fits.open(filt_filepath+filename)[0].data
+	        progress(file_num+1, file_total, status=('loading '+filt+' files'))
+	        file_num+=1
+	    # else:
+	    # 	print filename + ' is not a valid image file'
+
+	loop_number = file_num - 1
+	#stack dark image numpy arrays 
+	filt_stack = []
+	for x in range(0,loop_number):
+		filt_stack.append(fit_image[x])
+
+	#median combine all dark images into a final image
+	print '' # this is a hack that was needed to get the progress bar to work?????
+	print 'Combining dark images'
+	final_darks = np.median(filt_stack, axis=0)
+
+	# optional plotting. comment out if not wanted.
+	# plt.imshow(final_darks, cmap=colormap)
+	# plt.colorbar()
+	# plt.show()
+
+	return final_darks
+
+
 
 
 FILEPATH = '../data/'
@@ -25,322 +154,27 @@ while not (len(obs_number)>0 and re.match("^(?!_)\w*(?<!_)$",obs_number)):
                 'Please use only numeric characters (0-9)\n')
 all_filt_paths = [name for name in os.listdir(observation_filepaths[int(obs_number)]) if os.path.isdir(os.path.join(observation_filepaths[int(obs_number)], name))]
 
-for filt_path in all_filt_paths:
-	if any(file.endswith(".fit") for file in os.listdir(observation_filepaths[int(obs_number)]+'/'+filt_path)):
-		filepath = observation_filepaths[int(obs_number)]+'/'+filt_path+'/'
-
-		filt = {}
-		file_num = 0
-		for filename in os.listdir(filepath):
-		    if filename.endswith(".fit"): 
-		        filt[file_num] = fits.open(filepath+filename)[0].data
-		        file_num+=1
-		    else:
-		    	next
-
-		loop_number = file_num - 1
-		#stack dark image numpy arrays 
-		filt_stack = []
-		for x in range(0,loop_number):
-			filt_stack.append(filt[x])
-
-		#median combine all dark images into a final image
-		final_darks = np.median(filt_stack, axis=0)
-
-		sys.exit('done')
-
-###########################################################################################################
-###########################################################################################################
-###########################################################################################################
-
-###########################################################################################################
-################################################RED########################################################
-###########################################################################################################
-
-#### temporarily hardcoded
-#import fits files as hdulist and convert into numpy arays
-#filepath = '../data/20170613_venus/3ms/red/'
-#filepath = '../data/20170613_saturn/19ms/red/'
-filepath = '../data/20170510_jupiter/100ms/red/'
-#filepath = '../data/20170510_jupiter/250ms/red/'
-
-red_image = {}
-file_num = 0
-for filename in os.listdir(filepath):
-    if filename.endswith(".fit"): 
-        print 'found image at ' + filepath + filename
-        red_image[file_num] = fits.open(filepath+filename)[0].data
-        file_num+=1
-    else:
-    	print filename + ' is not a valid image file'
-
-#establishing a loop that equals the number of images being used
-loop_number = file_num - 1
-#print(loop_number)
-
-#subtract darks from numpy arrays and view images
-x=0
-for x in range(0,loop_number):
-	red_image[x] = (red_image[x] - final_darks)
-	img = Image.fromarray(red_image[x], 'RGB')
-	plt.imshow(red_image[x], cmap='Reds')
-	plt.colorbar()
-	plt.show()
-
-#test to find the dimensions of the image
-#image_size = red_image[0].shape
-#print image_size #1024 high x 1360 wide
-
-#Squishes each image into a 1D column array and finds where the max value is (vertical)
-indexcolumnarray = []
-x = 0
-for x in range(loop_number):
-	red_column = []
-	for i in range(1024):
-		y=0
-		for j in range(1360):
-			y += red_image[x][i][j]
-		red_column.append(y)
-	index = np.where(red_column == np.max(red_column))
-	indexcolumnarray.append(index[0][0])
-print(indexcolumnarray)
-#print(indexcolumnarray[0])
-
-#Squishes each image into a 1D row array and finds where the max value is (horizontal)
-indexrowarray = []
-x = 0
-for x in range(loop_number):
-	red_row = []
-	for i in range(1360):
-		y=0
-		for j in range(1024):
-			y += red_image[x][j][i]
-		red_row.append(y)
-	index = np.where(red_row == np.max(red_row))
-	indexrowarray.append(index[0][0])
-print(indexrowarray)
-#print(indexrowarray[0])
-
-#shift images vertically
-red_vertical_shifted = []
-x = 0
-for x in range(loop_number):
-	red_image[x] = np.roll(red_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
-	red_vertical_shifted.append(red_image[x])
-
-#shift images horizontally
-red_final_shifted = []
-x = 0
-for x in range(loop_number):
-	red_vertical_shifted[x] = np.roll(red_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
-	red_final_shifted.append(red_vertical_shifted[x])
-
-#median combine all shifted images into a final image
-final_red_image = np.median(red_final_shifted, axis=0)
-
-#display final median combined numpy array
-plt.imshow(final_red_image, cmap='Reds')
-plt.colorbar()
-plt.show()
-
-###########################################################################################################
-###########################################################################################################
-###########################################################################################################
-
-###########################################################################################################
-################################################GREEN######################################################
-###########################################################################################################
-
-#### temporarily hardcoded
-#import fits files as hdulist and convert into numpy arays
-#filepath = '../data/20170613_venus/3ms/green/'
-#filepath = '../data/20170613_saturn/19ms/green/'
-filepath = '../data/20170510_jupiter/100ms/green/'
-#filepath = '../data/20170510_jupiter/250ms/green/'
-
-green_image = {}
-file_num = 0
-for filename in os.listdir(filepath):
-    if filename.endswith(".fit"): 
-        print 'found image at ' + filepath + filename
-        green_image[file_num] = fits.open(filepath+filename)[0].data
-        file_num+=1
-    else:
-    	print filename + ' is not a valid image file'
-
-#establishing a loop that equals the number of images being used
-loop_number = file_num - 1
-#print(loop_number)
+final_darks = None
+rgb_image = []
+for filt in all_filt_paths:
+	if len(glob.glob1(observation_filepaths[int(obs_number)]+'/'+filt,"*.fit")) > 0:
+		filepath = observation_filepaths[int(obs_number)]
+		if final_darks is None:
+			print 'Processing darks...'
+			final_darks = filter_switch(filepath,filt,final_darks)
+		print 'Processing '+filt+'...'
+		rgb_image.append(filter_switch(filepath,filt,final_darks))
+	else:
+		print 'No fits files exist in '+observation_filepaths[int(obs_number)]+'/'+filt
+print len(rgb_image)
+sys.exit('done')
 
 
-#subtract darks from numpy arrays and view images
-x=0
-for x in range(loop_number):
-	green_image[x] = (green_image[x] - final_darks)
-	plt.imshow(green_image[x], cmap='Greens')
-	plt.colorbar()
-	plt.show()
-
-#test to find the dimensions of the image
-#image_size = green_image[0].shape
-#print image_size #1024 high x 1360 wide
-
-#Squishes each image into a 1D column array and finds where the max value is (vertical)
-indexcolumnarray = []
-x = 0
-for x in range(loop_number):
-	green_column = []
-	for i in range(1024):
-		y=0
-		for j in range(1360):
-			y += green_image[x][i][j]
-		green_column.append(y)
-	index = np.where(green_column == np.max(green_column))
-	indexcolumnarray.append(index[0][0])
-print(indexcolumnarray)
-#print(indexcolumnarray[0])
-
-#Squishes each image into a 1D row array and finds where the max value is (horizontal)
-indexrowarray = []
-x = 0
-for x in range(loop_number):
-	green_row = []
-	for i in range(1360):
-		y=0
-		for j in range(1024):
-			y += green_image[x][j][i]
-		green_row.append(y)
-	index = np.where(green_row == np.max(green_row))
-	indexrowarray.append(index[0][0])
-print(indexrowarray)
-#print(indexrowarray[0])
-
-#shift images vertically
-green_vertical_shifted = []
-x = 0
-for x in range(loop_number):
-	green_image[x] = np.roll(green_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
-	green_vertical_shifted.append(green_image[x])
-
-#shift images horizontally
-green_final_shifted = []
-x = 0
-for x in range(loop_number):
-	green_vertical_shifted[x] = np.roll(green_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
-	green_final_shifted.append(green_vertical_shifted[x])
-
-#median combine all shifted images into a final image
-final_green_image = np.median(green_final_shifted, axis=0)
-
-#display final median combined numpy array
-plt.imshow(final_green_image, cmap='Greens')
-plt.colorbar()
-plt.show()
-
-###########################################################################################################
-###########################################################################################################
-###########################################################################################################
-
-###########################################################################################################
-###############################################BLUE########################################################
-###########################################################################################################
-
-#### temporarily hardcoded
-#import fits files as hdulist and convert into numpy arays
-#filepath = '../data/20170613_venus/3ms/blue/'
-#filepath = '../data/20170613_saturn/19ms/blue/'
-filepath = '../data/20170510_jupiter/100ms/blue/'
-#filepath = '../data/20170510_jupiter/250ms/blue/'
-
-blue_image = {}
-file_num = 0
-for filename in os.listdir(filepath):
-    if filename.endswith(".fit"): 
-        print 'found image at ' + filepath + filename
-        blue_image[file_num] = fits.open(filepath+filename)[0].data
-        file_num+=1
-    else:
-    	print filename + ' is not a valid image file'
-
-#establishing a loop that equals the number of images being used
-loop_number = file_num - 1
-#print(loop_number)
 
 
-#subtract darks from numpy arrays and view images
-x=0
-for x in range(loop_number):
-	blue_image[x] = (blue_image[x] - final_darks)
-	plt.imshow(blue_image[x], cmap='Blues')
-	plt.colorbar()
-	plt.show()
-#only use if using skimage.io
-#	io.imshow(jupiter_blue_image[x])
-#	io.show()
 
-#test to find the dimensions of the image
-#image_size = blue_image[0].shape
-#print image_size #1024 high x 1360 wide
 
-#Squishes each image into a 1D column array and finds where the max value is (vertical)
-indexcolumnarray = []
-x = 0
-for x in range(loop_number):
-	blue_column = []
-	for i in range(1024):
-		y=0
-		for j in range(1360):
-			y += blue_image[x][i][j]
-		blue_column.append(y)
-	index = np.where(blue_column == np.max(blue_column))
-	indexcolumnarray.append(index[0][0])
-print(indexcolumnarray)
-#print(indexcolumnarray[0])
 
-#Squishes each image into a 1D row array and finds where the max value is (horizontal)
-indexrowarray = []
-x = 0
-for x in range(loop_number):
-	blue_row = []
-	for i in range(1360):
-		y=0
-		for j in range(1024):
-			y += blue_image[x][j][i]
-		blue_row.append(y)
-	index = np.where(blue_row == np.max(blue_row))
-	indexrowarray.append(index[0][0])
-print(indexrowarray)
-#print(indexrowarray[0])
-
-#image shift key
-	#axis 0 eq vertically
-	#axis 1 eq horizontally
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=1) #to the right
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=1) #to the left
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (100), axis=0) #down
-	#jupiter_blue_015_column_shift = np.roll(jupiter_blue_image[14], (-100), axis=0) #up
-
-#shift images vertically
-blue_vertical_shifted = []
-x = 0
-for x in range(loop_number):
-	blue_image[x] = np.roll(blue_image[x], (indexcolumnarray[0] - indexcolumnarray[x]), axis=0)
-	blue_vertical_shifted.append(blue_image[x])
-
-#shift images horizontally
-blue_final_shifted = []
-x = 0
-for x in range(loop_number):
-	blue_vertical_shifted[x] = np.roll(blue_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
-	blue_final_shifted.append(blue_vertical_shifted[x])
-
-#median combine all shifted images into a final image
-final_blue_image = np.median(blue_final_shifted, axis=0)
-
-#display final median combined numpy array
-plt.imshow(final_blue_image, cmap='Blues')
-plt.colorbar()
-plt.show()
 
 ###########################################################################################################
 ###########################################################################################################
@@ -350,7 +184,6 @@ plt.show()
 #################################################RGB#######################################################
 ###########################################################################################################
 
-rgb_image = [final_red_image, final_green_image, final_blue_image]
 
 #Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
 indexcolumnarray = []
@@ -452,6 +285,11 @@ plt.show()
 plt.imshow(final_rgb_image)
 plt.colorbar()
 plt.show()
+
+
+
+
+
 
 ###########################################################################################################
 ###########################################################################################################
