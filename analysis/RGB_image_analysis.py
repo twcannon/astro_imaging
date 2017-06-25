@@ -9,20 +9,18 @@ import glob
 
 
 
-def filter_switch(filt_filepath,filt,final_darks):
-	if final_darks is None:
-		return dark(filt_filepath+'/darks/','dark',"Greys_r")
-	else:
-		filt_filepath = filt_filepath+'/'+filt+'/'
-		return {
-			'red':color(filt_filepath,filt,"Reds_r",final_darks),
-			'blue':color(filt_filepath,filt,"Blues_r",final_darks),
-			'green':color(filt_filepath,filt,"Greens_r",final_darks)
-		}[filt]
-			# 'dark':dark(filt_filepath,filt,"Greys_r")
-			# 'visible':visible(filt_filepath,'visible','Greys_r'),
-			# 'flats':flats(filt_filepath,'flats','Greys_r'),
+def process_switch(filepaths):
+	if all (filts in filepaths for filts in ('darks','red','blue','green')):
+		return RGB_switch(filepaths)
 
+
+
+def RGB_switch(filepaths):
+	final_darks = dark(filepaths['darks'],'darks',"Greys_r")
+	red_image = color(filepaths['red'],'red',"Reds_r",final_darks),
+	green_image = color(filepaths['green'],'green',"Greens_r",final_darks),
+	blue_image = color(filepaths['blue'],'blue',"Blues_r",final_darks)
+	return [red_image,green_image,blue_image]
 
 
 
@@ -36,19 +34,18 @@ def color(filt_filepath,filt,colormap,final_darks):
 	        fit_image[file_num] = fits.open(filt_filepath+filename)[0].data
 	        progress(file_num+1, file_total, status=('loading '+filt+' files'))
 	        file_num+=1
-	    # else:
-	    # 	print filename + ' is not a valid image file'
+	    else:
+	    	print filename + ' is not a valid image file, Skipping...'
 
 	print '' # this is a hack that was needed to get the progress bar to work?????
 	print 'Processing '+str(file_total)+' files...'	
 
 	#subtract darks from numpy arrays and view images
 	loop_number = file_num - 1
-	# for x in range(0,loop_number):
-	# 	fit_image[x] = (fit_image[x] - final_darks)
+	for x in range(0,loop_number):
+		fit_image[x] = (fit_image[x] - final_darks)
 
-	# find the dimensions of the image
-	image_size = fit_image[0].shape
+	image_size = fit_image[0].shape # find the dimensions of the image
 
 	#Squishes each image into a 1D column array and finds where the max value is (vertical)
 	print 'Centering '+filt+' images vertically'
@@ -88,7 +85,6 @@ def color(filt_filepath,filt,colormap,final_darks):
 		fit_vertical_shifted[x] = np.roll(fit_vertical_shifted[x], (indexrowarray[0] - indexrowarray[x]), axis=1)
 		green_final_shifted.append(fit_vertical_shifted[x])
 
-	#median combine all shifted images into a final image
 	print 'Combining centered images'
 	final_fit_image = np.median(green_final_shifted, axis=0)
 
@@ -98,6 +94,7 @@ def color(filt_filepath,filt,colormap,final_darks):
 	plt.show()
 
 	return final_fit_image
+
 
 
 def dark(filt_filepath,filt,colormap):
@@ -111,8 +108,8 @@ def dark(filt_filepath,filt,colormap):
 	        fit_image[file_num] = fits.open(filt_filepath+filename)[0].data
 	        progress(file_num+1, file_total, status=('loading '+filt+' files'))
 	        file_num+=1
-	    # else:
-	    # 	print filename + ' is not a valid image file'
+	    else:
+	    	print filename + ' is not a valid image file, Skipping...'
 
 	loop_number = file_num - 1
 	#stack dark image numpy arrays 
@@ -120,7 +117,6 @@ def dark(filt_filepath,filt,colormap):
 	for x in range(0,loop_number):
 		filt_stack.append(fit_image[x])
 
-	#median combine all dark images into a final image
 	print '' # this is a hack that was needed to get the progress bar to work?????
 	print 'Combining dark images'
 	final_darks = np.median(filt_stack, axis=0)
@@ -154,36 +150,21 @@ while not (len(obs_number)>0 and re.match("^(?!_)\w*(?<!_)$",obs_number)):
                 'Please use only numeric characters (0-9)\n')
 all_filt_paths = [name for name in os.listdir(observation_filepaths[int(obs_number)]) if os.path.isdir(os.path.join(observation_filepaths[int(obs_number)], name))]
 
-final_darks = None
-rgb_image = []
+filepaths = {}
 for filt in all_filt_paths:
 	if len(glob.glob1(observation_filepaths[int(obs_number)]+'/'+filt,"*.fit")) > 0:
-		filepath = observation_filepaths[int(obs_number)]
-		if final_darks is None:
-			print 'Processing darks...'
-			final_darks = filter_switch(filepath,filt,final_darks)
-		print 'Processing '+filt+'...'
-		rgb_image.append(filter_switch(filepath,filt,final_darks))
+		print 'Adding '+filt+' to filepath list'
+		filepaths[filt] = observation_filepaths[int(obs_number)]+'/'+filt+'/'
 	else:
-		print 'No fits files exist in '+observation_filepaths[int(obs_number)]+'/'+filt
-print len(rgb_image)
-sys.exit('done')
-
-
-
-
-
-
-
-
-###########################################################################################################
-###########################################################################################################
-###########################################################################################################
-
-###########################################################################################################
-#################################################RGB#######################################################
-###########################################################################################################
-
+		print 'No fits files exist in '+observation_filepaths[int(obs_number)]+'/'+filt+'. Skipping...'
+rgb_image = process_switch(filepaths)
+print rgb_image
+print 'red'
+print rgb_image[0]
+print 'green'
+print rgb_image[1]
+print 'blue'
+print rgb_image[2]
 
 #Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
 indexcolumnarray = []
@@ -285,12 +266,3 @@ plt.show()
 plt.imshow(final_rgb_image)
 plt.colorbar()
 plt.show()
-
-
-
-
-
-
-###########################################################################################################
-###########################################################################################################
-###########################################################################################################
