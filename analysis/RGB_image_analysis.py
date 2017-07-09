@@ -17,10 +17,11 @@ def process_switch(filepaths):
 
 def RGB_switch(filepaths):
 	final_darks = dark(filepaths['darks'],'darks',"Greys_r")
-	red_image = color(filepaths['red'],'red',"Reds_r",final_darks),
-	green_image = color(filepaths['green'],'green',"Greens_r",final_darks),
+	red_image = color(filepaths['red'],'red',"Reds_r",final_darks)
+	green_image = color(filepaths['green'],'green',"Greens_r",final_darks)
 	blue_image = color(filepaths['blue'],'blue',"Blues_r",final_darks)
-	return [red_image,green_image,blue_image]
+	rgb_image = [red_image,green_image,blue_image]
+	return rgb_image
 
 
 
@@ -158,14 +159,8 @@ for filt in all_filt_paths:
 	else:
 		print 'No fits files exist in '+observation_filepaths[int(obs_number)]+'/'+filt+'. Skipping...'
 rgb_image = process_switch(filepaths)
-print rgb_image
-print 'red'
-print rgb_image[0]
-print 'green'
-print rgb_image[1]
-print 'blue'
-print rgb_image[2]
 
+print 'Centering RGB images'
 #Squishes each jupiter image into a 1D column array and finds where the max value is (vertical)
 indexcolumnarray = []
 x = 0
@@ -179,7 +174,6 @@ for x in range(3):
 	index = np.where(rgb_column == np.max(rgb_column))
 	indexcolumnarray.append(index[0][0])
 print(indexcolumnarray)
-#print(indexcolumnarray[0])
 
 #Squishes each jupiter image into a 1D row array and finds where the max value is (horizontal)
 indexrowarray = []
@@ -194,7 +188,6 @@ for x in range(3):
 	index = np.where(rgb_row == np.max(rgb_row))
 	indexrowarray.append(index[0][0])
 print(indexrowarray)
-#print(indexrowarray[0])
 
 #shift images vertically
 rgb_vertical_shifted = []
